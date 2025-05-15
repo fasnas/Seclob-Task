@@ -5,49 +5,52 @@ import { UserContext } from "./context/context.jsx";
 const Home = () => {
   const { category, fetchCategories } = useContext(UserContext);
 
-  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showCatModal, setShowCatModal] = useState(false);
   const [showSubcatModal, setShowSubcatModal] = useState(false);
 
   const [categoryName, setCategoryName] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [subCategoryName, setSubCategoryName] = useState("");
 
+  // Handle Add Category
   const handleAddCategory = async () => {
     if (!categoryName.trim()) return;
 
     try {
-      await axiosInstance.post("/catagory", { name: categoryName.trim() });
+      await axiosInstance.post("/catagory", { name: categoryName });
+      await fetchCategories();
       setCategoryName("");
-      setShowCategoryModal(false);
-      fetchCategories();
+      setShowCatModal(false);
     } catch (error) {
-      console.error("Error adding category:", error.response?.data || error.message);
+      console.error("Error adding category:", error);
     }
   };
 
+  // Handle Add Subcategory
   const handleAddSubcategory = async () => {
     if (!selectedCategory || !subCategoryName.trim()) return;
 
     try {
-      await axiosInstance.patch("/subcatagory", {
+      await axiosInstance.post("/subcatagory", {
         categoryName: selectedCategory,
-        name: subCategoryName.trim(),
+        name: subCategoryName,
       });
+      await fetchCategories();
       setSelectedCategory("");
       setSubCategoryName("");
       setShowSubcatModal(false);
-      fetchCategories(); 
     } catch (error) {
-      console.error("Error adding subcategory:", error.response?.data || error.message);
+      console.error("Error adding subcategory:", error);
     }
   };
 
   return (
     <main className="w-4/5 p-6 relative">
+      {/* Action Buttons */}
       <div className="flex justify-end gap-2 mb-4">
         <button
           className="bg-yellow-400 px-4 py-2 rounded"
-          onClick={() => setShowCategoryModal(true)}
+          onClick={() => setShowCatModal(true)}
         >
           Add category
         </button>
@@ -60,8 +63,9 @@ const Home = () => {
         <button className="bg-yellow-400 px-4 py-2 rounded">Add product</button>
       </div>
 
-      {showCategoryModal && (
-        <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-og z-10">
+      {/* Add Category Modal */}
+      {showCatModal && (
+        <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-40 z-10">
           <div className="bg-white p-6 rounded shadow-md w-96">
             <h3 className="text-xl font-semibold mb-4">Add New Category</h3>
             <input
@@ -73,7 +77,7 @@ const Home = () => {
             />
             <div className="flex justify-end gap-2">
               <button
-                onClick={() => setShowCategoryModal(false)}
+                onClick={() => setShowCatModal(false)}
                 className="bg-gray-300 px-4 py-2 rounded"
               >
                 Cancel
@@ -89,11 +93,13 @@ const Home = () => {
         </div>
       )}
 
+      {/* Add Subcategory Modal */}
       {showSubcatModal && (
-        <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-og z-10">
+        <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-40 z-10">
           <div className="bg-white p-6 rounded shadow-md w-96">
-            <h3 className="text-xl font-semibold mb-4">Add New Subcategory</h3>
+            <h3 className="text-xl font-semibold mb-4">Add Subcategory</h3>
 
+            {/* Select Category */}
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
@@ -101,12 +107,13 @@ const Home = () => {
             >
               <option value="">Select Category</option>
               {category?.map((cat) => (
-                <option key={cat._id} value={cat.name.trim()}>
+                <option key={cat._id} value={cat.name}>
                   {cat.name}
                 </option>
               ))}
             </select>
 
+            {/* Subcategory Input */}
             <input
               type="text"
               value={subCategoryName}

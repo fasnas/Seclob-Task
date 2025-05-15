@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Singup from "./Components/Singup";
 import Login from "./Components/Login";
 import ProductListingPage from "./Components/Home";
-import Layout from "./Components/Layout";
+import Layout from "./Components/Layout/Layout";
 import Home from "./Components/Home";
 
 const App = () => {
@@ -17,7 +17,7 @@ const App = () => {
            <Route index element={<Home />} />
           </Route>
 
-          <Route path="/home" element={<ProductListingPage />} />
+          {/* <Route path="/home" element={<ProductListingPage />} /> */}
         </Routes>
       </Router>
     </div>
