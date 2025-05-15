@@ -1,146 +1,70 @@
-import React, { useState, useContext } from "react";
-import axiosInstance from "../../axiosINstance.js";
-import { UserContext } from "./context/context.jsx";
+import mongoose from "mongoose";
+import category from "../Models/catagorySchema.js";
+import asyncHandler from "../middlewares/asyncHandler.js";
 
-const Home = () => {
-  const { category, fetchCategories } = useContext(UserContext);
+// Add Category
+export const addCategory = asyncHandler(async (req, res) => {
+  const { name } = req.body;
 
-  const [showCatModal, setShowCatModal] = useState(false);
-  const [showSubcatModal, setShowSubcatModal] = useState(false);
+  if (!name) {
+    return res.status(400).json({ message: "Category name is required" });
+  }
 
-  const [categoryName, setCategoryName] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [subCategoryName, setSubCategoryName] = useState("");
+  const existing = await category.findOne({ name: name.trim() });
+  if (existing) {
+    return res.status(400).json({ message: "Category already exists" });
+  }
 
-  // Handle Add Category
-  const handleAddCategory = async () => {
-    if (!categoryName.trim()) return;
+  const newCategory = new category({ name: name.trim(), subcategories: [] });
+  const saved = await newCategory.save();
 
-    try {
-      await axiosInstance.post("/catagory", { name: categoryName });
-      await fetchCategories();
-      setCategoryName("");
-      setShowCatModal(false);
-    } catch (error) {
-      console.error("Error adding category:", error);
-    }
-  };
+  res.status(201).json({
+    message: "Category created successfully",
+    category: saved,
+  });
+});
 
-  // Handle Add Subcategory
-  const handleAddSubcategory = async () => {
-    if (!selectedCategory || !subCategoryName.trim()) return;
+// Add Subcategory
+// @route POST /api/categories/subcategory
+export const addSubcategory = asyncHandler(async (req, res) => {
+  const { categoryName, name } = req.body;
 
-    try {
-      await axiosInstance.post("/subcatagory", {
-        categoryName: selectedCategory,
-        name: subCategoryName,
-      });
-      await fetchCategories();
-      setSelectedCategory("");
-      setSubCategoryName("");
-      setShowSubcatModal(false);
-    } catch (error) {
-      console.error("Error adding subcategory:", error);
-    }
-  };
+  if (!categoryName) {
+    return res.status(400).json({ message: "Category name is required in body" });
+  }
 
-  return (
-    <main className="w-4/5 p-6 relative">
-      {/* Action Buttons */}
-      <div className="flex justify-end gap-2 mb-4">
-        <button
-          className="bg-yellow-400 px-4 py-2 rounded"
-          onClick={() => setShowCatModal(true)}
-        >
-          Add category
-        </button>
-        <button
-          className="bg-yellow-400 px-4 py-2 rounded"
-          onClick={() => setShowSubcatModal(true)}
-        >
-          Add sub category
-        </button>
-        <button className="bg-yellow-400 px-4 py-2 rounded">Add product</button>
-      </div>
+  if (!name) {
+    return res.status(400).json({ message: "Subcategory name is required" });
+  }
 
-      {/* Add Category Modal */}
-      {showCatModal && (
-        <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-40 z-10">
-          <div className="bg-white p-6 rounded shadow-md w-96">
-            <h3 className="text-xl font-semibold mb-4">Add New Category</h3>
-            <input
-              type="text"
-              value={categoryName}
-              onChange={(e) => setCategoryName(e.target.value)}
-              placeholder="Category name"
-              className="w-full border p-2 rounded mb-4"
-            />
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setShowCatModal(false)}
-                className="bg-gray-300 px-4 py-2 rounded"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddCategory}
-                className="bg-yellow-400 px-4 py-2 rounded"
-              >
-                Add
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+  const foundCategory = await category.findOne({ name: categoryName.trim() });
+  if (!foundCategory) {
+    return res.status(404).json({ message: "Category not found" });
+  }
 
-      {/* Add Subcategory Modal */}
-      {showSubcatModal && (
-        <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-40 z-10">
-          <div className="bg-white p-6 rounded shadow-md w-96">
-            <h3 className="text-xl font-semibold mb-4">Add Subcategory</h3>
-
-            {/* Select Category */}
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full border p-2 rounded mb-4"
-            >
-              <option value="">Select Category</option>
-              {category?.map((cat) => (
-                <option key={cat._id} value={cat.name}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-
-            {/* Subcategory Input */}
-            <input
-              type="text"
-              value={subCategoryName}
-              onChange={(e) => setSubCategoryName(e.target.value)}
-              placeholder="Subcategory name"
-              className="w-full border p-2 rounded mb-4"
-            />
-
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setShowSubcatModal(false)}
-                className="bg-gray-300 px-4 py-2 rounded"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddSubcategory}
-                className="bg-yellow-400 px-4 py-2 rounded"
-              >
-                Add
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </main>
+  const subcategoryExists = foundCategory.subcategories.some(
+    (sub) => sub.name.toLowerCase() === name.trim().toLowerCase()
   );
-};
 
-export default Home;
+  if (subcategoryExists) {
+    return res.status(400).json({ message: "Subcategory already exists in this category" });
+  }
+
+  foundCategory.subcategories.push({ name: name.trim() });
+  const updatedCategory = await foundCategory.save();
+
+  res.status(200).json({
+    message: "Subcategory added successfully",
+    category: updatedCategory,
+  });
+});
+
+
+export const getAllCategories = asyncHandler(async (req, res) => {
+  const categories = await category.find();
+
+  res.status(200).json({
+    message: "Categories fetched successfully",
+    categories,
+  });
+});
