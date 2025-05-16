@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../../axiosINstance";  // your configured axios
+import axiosInstance from "../../axiosINstance";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -21,7 +21,6 @@ const Login = () => {
         password,
       });
 
-      // Assuming backend returns token in response.data.token
       const token = response.data.token;
       if (token) {
         localStorage.setItem("token", token);
@@ -69,6 +68,7 @@ const Login = () => {
           <button
             type="submit"
             className="bg-[#f39c12] text-white py-2 rounded-full hover:bg-[#e67e22] transition"
+            
           >
             SIGN IN
           </button>
@@ -91,5 +91,6 @@ const Login = () => {
     </div>
   );
 };
+
 
 export default Login;

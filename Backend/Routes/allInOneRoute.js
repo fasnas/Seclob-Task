@@ -1,6 +1,7 @@
 import express from "express"
 import { login, userRegister } from "../Controller/userController.js"
 import { addCategory, addSubcategory, getAllCategories } from "../Controller/categoryController.js"
+import { addProduct, getProducts } from "../Controller/productController.js"
 
 const Router=express.Router()
 
@@ -9,6 +10,8 @@ Router.post("/login",login)
 Router.post("/catagory",addCategory)
 Router.get("/getcatagory",getAllCategories)
 Router.patch("/subcatagory",addSubcategory)
+Router.post("/addproduct",addProduct)
+Router.get("/getproducts",getProducts)
 
 
 export default Router

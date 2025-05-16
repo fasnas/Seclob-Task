@@ -24,8 +24,7 @@ export const addCategory = asyncHandler(async (req, res) => {
   });
 });
 
-// Add Subcategory
-// @route POST /api/categories/subcategory
+
 export const addSubcategory = asyncHandler(async (req, res) => {
   const { categoryName, name } = req.body;
 
